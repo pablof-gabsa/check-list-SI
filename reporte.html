@@ -19,6 +19,7 @@
         body { background-color: #f3f4f6; }
         .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-out; }
         .accordion-content.open { max-height: 2000px; transition: max-height 1s ease-in-out; }
+        .filter-btn.active { background-color: #009999; color: white; border-color: #009999;}
     </style>
 </head>
 <body class="antialiased">
@@ -28,16 +29,25 @@
             <p class="text-md text-gray-600 mt-2">Seguimiento interactivo del estado de temas pendientes (Modo solo lectura)</p>
         </header>
 
-        <div id="controls" class="bg-white p-4 rounded-lg shadow-md mb-8 flex items-center justify-between gap-4">
+        <div id="controls" class="bg-white p-4 rounded-lg shadow-md mb-8 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div class="flex items-center gap-2">
                 <span class="text-gray-600 font-bold">Modo Visualización</span>
             </div>
-            <div id="filters" class="flex flex-wrap items-center gap-2">
-                <span class="text-sm font-semibold text-gray-600 mr-2">Filtrar:</span>
-                <button class="filter-btn active py-1 px-3 rounded-full text-sm transition-colors border" data-filter="Todos">Todos</button>
-                <button class="filter-btn py-1 px-3 rounded-full text-sm transition-colors border" data-filter="Pendiente">Pendiente</button>
-                <button class="filter-btn py-1 px-3 rounded-full text-sm transition-colors border" data-filter="En Proceso">En Proceso</button>
-                <button class="filter-btn py-1 px-3 rounded-full text-sm transition-colors border" data-filter="OK">OK</button>
+            <div class="flex flex-col sm:flex-row gap-4 items-center">
+                <div id="status-filters" class="flex flex-wrap items-center gap-2">
+                    <span class="text-sm font-semibold text-gray-600 mr-2">Estado:</span>
+                    <button class="filter-btn active py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="status" data-filter="Todos">Todos</button>
+                    <button class="filter-btn py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="status" data-filter="Pendiente">Pendiente</button>
+                    <button class="filter-btn py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="status" data-filter="En Proceso">En Proceso</button>
+                    <button class="filter-btn py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="status" data-filter="OK">OK</button>
+                </div>
+                <div id="priority-filters" class="flex flex-wrap items-center gap-2 border-t sm:border-t-0 sm:border-l pt-2 sm:pt-0 sm:pl-4 mt-2 sm:mt-0">
+                    <span class="text-sm font-semibold text-gray-600 mr-2">Prioridad:</span>
+                    <button class="filter-btn active py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="priority" data-filter="Todos">Todas</button>
+                    <button class="filter-btn py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="priority" data-filter="Baja">Baja</button>
+                    <button class="filter-btn py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="priority" data-filter="Media">Media</button>
+                    <button class="filter-btn py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="priority" data-filter="Alta">Alta</button>
+                </div>
             </div>
         </div>
 
@@ -84,32 +94,46 @@
         let checklistData = [];
         let statusChart = null;
         let responsibleChart = null; 
-        let currentFilter = 'Todos';
+        let currentStatusFilter = 'Todos';
+        let currentPriorityFilter = 'Todos';
 
         const rubros = ['Operativos', 'Obras de infraestructura', 'Administrativos', 'Archivado'];
         const statusOptions = { 'Pendiente': 'bg-yellow-100 text-yellow-800', 'OK': 'bg-green-100 text-green-800', 'En Proceso': 'bg-blue-100 text-blue-800' };
         const statusColors = { 'Pendiente': '#FBBF24', 'OK': '#10B981', 'En Proceso': '#60A5FA' };
+        
+        const priorityStyles = {
+            'Alta': 'bg-red-100 text-red-800',
+            'Media': 'bg-yellow-100 text-yellow-800',
+            'Baja': 'bg-gray-100 text-gray-800',
+        };
+
         const rubroIcons = {
-            'Operativos': `<svg ... omitted for brevity ...></svg>`,
-            'Obras de infraestructura': `<svg ... omitted for brevity ...></svg>`,
-            'Administrativos': `<svg ... omitted for brevity ...></svg>`,
-            'Archivado': `<svg ... omitted for brevity ...></svg>`,
+            'Operativos': `<svg ...></svg>`,
+            'Obras de infraestructura': `<svg ...></svg>`,
+            'Administrativos': `<svg ...></svg>`,
+            'Archivado': `<svg ...></svg>`,
         };
         
-        // --- FUNCIÓN DE DATOS (FIREBASE) ---
         function loadData() {
             database.ref('tasks').on('value', (snapshot) => {
                 const data = snapshot.val();
-                checklistData = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
+                if (data) {
+                    checklistData = Array.isArray(data) ? data : Object.values(data);
+                    checklistData = checklistData.map(item => ({...item, prioridad: item.prioridad || 'Baja'}));
+                } else {
+                    checklistData = [];
+                }
                 renderChecklist();
             });
         }
 
-        // --- LÓGICA DE RENDERIZADO (VERSIÓN SOLO LECTURA) ---
         function renderChecklist() {
             const container = document.getElementById('checklist-container');
             container.innerHTML = '';
-            const filteredData = checklistData.filter(item => currentFilter === 'Todos' || item.estado === currentFilter);
+            const filteredData = checklistData.filter(item => 
+                (currentStatusFilter === 'Todos' || item.estado === currentStatusFilter) &&
+                (currentPriorityFilter === 'Todos' || item.prioridad === currentPriorityFilter)
+            );
             const groupedData = filteredData.reduce((acc, item) => { (acc[item.rubro] = acc[item.rubro] || []).push(item); return acc; }, {});
 
             rubros.forEach(rubro => {
@@ -135,25 +159,26 @@
                         const taskRow = document.createElement('div');
                         taskRow.className = 'flex flex-col sm:flex-row items-start sm:items-center gap-x-6 gap-y-2';
                         
-                        // Requerimiento como texto plano
                         const requerimientoP = document.createElement('p');
                         requerimientoP.className = 'flex-1 text-gray-800 font-medium';
                         requerimientoP.textContent = item.requerimiento;
                         taskRow.appendChild(requerimientoP);
+
+                        const priorityBadge = document.createElement('span');
+                        priorityBadge.textContent = item.prioridad || 'Baja';
+                        priorityBadge.className = `px-2 py-1 text-xs font-semibold rounded-full ${priorityStyles[item.prioridad] || priorityStyles['Baja']}`;
+                        taskRow.appendChild(priorityBadge);
                         
-                        // Responsable como texto plano
                         const responsibleSpan = document.createElement('span');
                         responsibleSpan.className = 'text-sm text-gray-700 w-36';
                         responsibleSpan.innerHTML = `<span class="font-semibold">Resp:</span> ${item.responsable || 'N/A'}`;
                         taskRow.appendChild(responsibleSpan);
 
-                        // Deadline como texto plano
                         const deadlineSpan = document.createElement('span');
                         deadlineSpan.className = 'text-sm text-gray-700';
                         deadlineSpan.innerHTML = `<span class="font-semibold">Vence:</span> ${item.deadline || 'N/A'}`;
                         taskRow.appendChild(deadlineSpan);
 
-                        // Estado como un badge de texto plano
                         const statusBadge = document.createElement('span');
                         statusBadge.textContent = item.estado;
                         statusBadge.className = `px-2 py-1 text-xs font-semibold rounded-full ${statusOptions[item.estado] || 'bg-gray-100'}`;
@@ -171,15 +196,20 @@
             updateSummary();
         }
         
-        // --- Resto de las funciones (sin cambios en su mayoría) ---
         function updateSummary() {
-            const dataToSummarize = checklistData.filter(item => currentFilter === 'Todos' || item.estado === currentFilter);
+            const dataToSummarize = checklistData.filter(item => 
+                (currentStatusFilter === 'Todos' || item.estado === currentStatusFilter) &&
+                (currentPriorityFilter === 'Todos' || item.prioridad === currentPriorityFilter)
+            );
             const total = dataToSummarize.length;
             const stats = dataToSummarize.reduce((acc, item) => { (acc[item.estado] = (acc[item.estado] || 0) + 1); return acc; }, {});
             const okCount = stats['OK'] || 0;
             const progress = total > 0 ? (okCount / total) * 100 : 0;
             document.getElementById('progressBar').style.width = `${progress}%`;
-            document.getElementById('filter-label').textContent = currentFilter !== 'Todos' ? `(Filtro: ${currentFilter})` : '';
+            let filterText = [];
+            if (currentStatusFilter !== 'Todos') filterText.push(`Estado: ${currentStatusFilter}`);
+            if (currentPriorityFilter !== 'Todos') filterText.push(`Prioridad: ${currentPriorityFilter}`);
+            document.getElementById('filter-label').textContent = filterText.length > 0 ? `(${filterText.join(', ')})` : '';
             renderPieChart(stats);
             renderResponsibleChart(dataToSummarize);
             const statsContainer = document.getElementById('stats');
@@ -213,10 +243,16 @@
             responsibleChart = new Chart(ctx, { type: 'bar', data: { labels: labels, datasets: [{ label: 'Tareas Asignadas', data: chartData, backgroundColor: 'rgba(0, 153, 153, 0.6)', borderColor: 'rgba(0, 153, 153, 1)', borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false }, title: { display: true, text: 'Tareas por Responsable' } } } });
         }
         function handleFilterClick(event) {
-            const filter = event.target.dataset.filter;
-            if (filter) {
-                currentFilter = filter;
-                document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            const filterType = event.target.dataset.filterType;
+            const filterValue = event.target.dataset.filter;
+            if (filterType) {
+                if (filterType === 'status') {
+                    currentStatusFilter = filterValue;
+                    document.querySelectorAll('#status-filters .filter-btn').forEach(btn => btn.classList.remove('active'));
+                } else if (filterType === 'priority') {
+                    currentPriorityFilter = filterValue;
+                    document.querySelectorAll('#priority-filters .filter-btn').forEach(btn => btn.classList.remove('active'));
+                }
                 event.target.classList.add('active');
                 renderChecklist();
             }
@@ -224,7 +260,8 @@
         function toggleAccordion(accordionItem) { const content = accordionItem.querySelector('.accordion-content'); const icon = accordionItem.querySelector('svg:last-child'); content.classList.toggle('open'); icon.classList.toggle('rotate-180'); }
         
         document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('filters').addEventListener('click', handleFilterClick);
+            document.getElementById('status-filters').addEventListener('click', handleFilterClick);
+            document.getElementById('priority-filters').addEventListener('click', handleFilterClick);
             loadData();
         });
     </script>
