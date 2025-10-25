@@ -146,7 +146,7 @@
     </div>
 
     <script>
-        // --- INICIO DE LA CONFIGURACIÓN DE FIREBASE (SANTA ISABEL 1) ---
+        // --- INICIO DE LA CONFIGURACIÓN DE FIREBASE ---
         const firebaseConfig = {
             apiKey: "AIzaSyDGZm0nslh4Zdhl294wW9l_wqI2t6bDl04",
             authDomain: "checklist-santa-isabel-1.firebaseapp.com",
@@ -169,12 +169,10 @@
 
         const rubros = ['Operativos', 'Obras de infraestructura', 'Administrativos', 'Archivado'];
         const responsibleOptions = ['Administrador', 'Intendente', 'Proveedor', 'Operadora', 'RRHH', 'Compras', 'Otros'];
-        
+        const statusOrder = ['Pendiente', 'En Proceso', 'OK'];
         const statusOptions = { 'Pendiente': 'bg-yellow-100 text-yellow-800 border-yellow-300', 'OK': 'bg-institutional/20 text-institutional border-institutional/40', 'En Proceso': 'bg-blue-100 text-blue-800 border-blue-300' };
         const statusColors = { 'Pendiente': '#FBBF24', 'OK': '#009999', 'En Proceso': '#60A5FA' };
-        const statusOrder = ['Pendiente', 'En Proceso', 'OK'];
         
-        // NUEVO: Configuración de Prioridad
         const priorityOptions = ['Baja', 'Media', 'Alta'];
         const priorityStyles = {
             'Alta': 'bg-red-100 text-red-800 border-red-300',
@@ -183,10 +181,10 @@
         };
 
         const rubroIcons = {
-            'Operativos': `<svg ... omitted ...></svg>`, // Omitido por brevedad
-            'Obras de infraestructura': `<svg ... omitted ...></svg>`,
-            'Administrativos': `<svg ... omitted ...></svg>`,
-            'Archivado': `<svg ... omitted ...></svg>`,
+            'Operativos': `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>`,
+            'Obras de infraestructura': `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>`,
+            'Administrativos': `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>`,
+            'Archivado': `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>`,
         };
         
         function saveData() { database.ref('tasks').set(checklistData); }
@@ -195,7 +193,7 @@
                 const data = snapshot.val();
                 if (data) {
                     checklistData = Array.isArray(data) ? data : Object.values(data);
-                    checklistData = checklistData.map(item => ({...item, isEditing: item.isEditing || false}));
+                    checklistData = checklistData.map(item => ({...item, isEditing: item.isEditing || false, prioridad: item.prioridad || 'Baja'}));
                 } else { checklistData = []; }
                 renderChecklist();
             });
@@ -204,7 +202,6 @@
         function renderChecklist() {
             const container = document.getElementById('checklist-container');
             container.innerHTML = '';
-            // MODIFICADO: Lógica de filtro combinada
             const filteredData = checklistData.filter(item => 
                 (currentStatusFilter === 'Todos' || item.estado === currentStatusFilter) &&
                 (currentPriorityFilter === 'Todos' || item.prioridad === currentPriorityFilter)
@@ -213,7 +210,6 @@
 
             rubros.forEach(rubro => {
                 const items = groupedData[rubro] || [];
-                // ... (código de creación de acordeón sin cambios)
                 const accordionItem = document.createElement('div');
                 accordionItem.className = 'bg-white rounded-lg shadow-md overflow-hidden';
                 const okCount = items.filter(i => i.estado === 'OK').length;
@@ -235,7 +231,6 @@
                         const taskRow = document.createElement('div');
                         taskRow.className = 'flex flex-col sm:flex-row items-start sm:items-center gap-x-4 gap-y-2';
                         
-                        // ... (lógica de edición de requerimiento sin cambios)
                         if (item.isEditing) {
                             const editInput = document.createElement('textarea'); editInput.value = item.requerimiento;
                             editInput.className = 'flex-1 p-1 border rounded-md w-full'; editInput.id = `edit-input-${item.id}`; editInput.rows = 2;
@@ -248,34 +243,25 @@
                         const detailsDiv = document.createElement('div');
                         detailsDiv.className = 'flex items-center gap-x-4';
 
-                        // NUEVO: Desplegable de Prioridad en la tarea
                         const prioritySelect = document.createElement('select');
                         prioritySelect.className = 'priority-select p-1 border rounded-md text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-institutional';
-                        priorityOptions.forEach(prio => {
-                            const option = document.createElement('option');
-                            option.value = prio; option.textContent = prio;
-                            if (item.prioridad === prio) option.selected = true;
-                            prioritySelect.add(option);
-                        });
-                        // Aplicar estilos de color
+                        priorityOptions.forEach(prio => { const option = document.createElement('option'); option.value = prio; option.textContent = prio; if (item.prioridad === prio) option.selected = true; prioritySelect.add(option); });
                         prioritySelect.className += ` ${priorityStyles[item.prioridad] || priorityStyles['Baja']}`;
                         prioritySelect.onchange = (e) => { handleFieldChange(e, item.id, 'prioridad'); };
                         detailsDiv.appendChild(prioritySelect);
-
-                        // ... (código de responsable y deadline sin cambios)
+                        
                         const responsibleSelect = document.createElement('select'); responsibleSelect.className = 'responsible-select p-1 border-b focus:border-institutional focus:outline-none w-36 text-sm';
                         responsibleOptions.forEach(resp => { const option = document.createElement('option'); option.value = resp; option.textContent = resp; if (item.responsable === resp) option.selected = true; responsibleSelect.add(option); });
                         responsibleSelect.onchange = (e) => handleFieldChange(e, item.id, 'responsable');
                         detailsDiv.appendChild(responsibleSelect);
                         const deadlineDiv = document.createElement('div'); deadlineDiv.className = 'flex items-center text-sm';
-                        deadlineDiv.innerHTML = `<svg class="h-5 w-5 mr-2 text-gray-500" ...></svg>`;
+                        deadlineDiv.innerHTML = `<svg class="h-5 w-5 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>`;
                         const deadlineInput = document.createElement('input'); deadlineInput.type = 'date'; deadlineInput.value = item.deadline;
                         deadlineInput.className = 'p-1 border-b focus:border-institutional focus:outline-none';
                         deadlineInput.onchange = (e) => handleFieldChange(e, item.id, 'deadline');
                         deadlineDiv.appendChild(deadlineInput); detailsDiv.appendChild(deadlineDiv);
                         taskRow.appendChild(detailsDiv);
                         
-                        // ... (código de estado y botones sin cambios)
                         const statusSelect = document.createElement('select'); statusSelect.className = 'status-select w-full sm:w-auto p-2 border rounded-md text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-institutional';
                         statusOrder.forEach(status => { const option = document.createElement('option'); option.value = status; option.textContent = status; if (item.estado === status) option.selected = true; statusSelect.add(option); });
                         applyStatusStyles(statusSelect, item.estado);
@@ -291,10 +277,10 @@
                             rubros.filter(r => r !== item.rubro).forEach(r => { moveSelect.innerHTML += `<option value="${r}">${r}</option>`; });
                             moveSelect.addEventListener('change', (e) => handleMoveTask(e, item.id));
                             const editBtn = document.createElement('button'); editBtn.className = 'p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-100 rounded-full transition-colors';
-                            editBtn.innerHTML = `<svg class="h-5 w-5" ...></svg>`;
+                            editBtn.innerHTML = `<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>`;
                             editBtn.onclick = () => handleToggleEdit(item.id);
                             const deleteBtn = document.createElement('button'); deleteBtn.className = 'p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-100 rounded-full transition-colors';
-                            deleteBtn.innerHTML = `<svg class="h-5 w-5" ...></svg>`;
+                            deleteBtn.innerHTML = `<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>`;
                             deleteBtn.onclick = () => handleDeleteTask(item.id);
                             actionsDiv.appendChild(moveSelect); actionsDiv.appendChild(editBtn); actionsDiv.appendChild(deleteBtn);
                         }
@@ -311,66 +297,86 @@
             updateSummary();
         }
 
-        // --- MANEJADORES DE EVENTOS ---
-        function handleFilterClick(event) {
-            const filterType = event.target.dataset.filterType;
-            const filterValue = event.target.dataset.filter;
-            if (filterType) {
-                if (filterType === 'status') {
-                    currentStatusFilter = filterValue;
-                    document.querySelectorAll('#status-filters .filter-btn').forEach(btn => btn.classList.remove('active'));
-                } else if (filterType === 'priority') {
-                    currentPriorityFilter = filterValue;
-                    document.querySelectorAll('#priority-filters .filter-btn').forEach(btn => btn.classList.remove('active'));
-                }
-                event.target.classList.add('active');
-                renderChecklist();
+        function updateSummary() {
+            const dataToSummarize = checklistData.filter(item => 
+                (currentStatusFilter === 'Todos' || item.estado === currentStatusFilter) &&
+                (currentPriorityFilter === 'Todos' || item.prioridad === currentPriorityFilter)
+            );
+            const total = dataToSummarize.length;
+            const stats = dataToSummarize.reduce((acc, item) => { (acc[item.estado] = (acc[item.estado] || 0) + 1); return acc; }, {});
+            const okCount = stats['OK'] || 0;
+            const progress = total > 0 ? (okCount / total) * 100 : 0;
+            document.getElementById('progressBar').style.width = `${progress}%`;
+            document.getElementById('filter-label').textContent = ''; // Limpiamos para construir el nuevo
+            if (currentStatusFilter !== 'Todos' || currentPriorityFilter !== 'Todos') {
+                let filterText = [];
+                if (currentStatusFilter !== 'Todos') filterText.push(`Estado: ${currentStatusFilter}`);
+                if (currentPriorityFilter !== 'Todos') filterText.push(`Prioridad: ${currentPriorityFilter}`);
+                document.getElementById('filter-label').textContent = `(${filterText.join(', ')})`;
             }
+            renderPieChart(stats);
+            renderResponsibleChart(dataToSummarize);
+            const statsContainer = document.getElementById('stats');
+            statsContainer.innerHTML = '';
+            const fullStats = {'Total': total, 'OK': okCount, ...stats};
+            const statOrder = ['Total', 'OK', 'Pendiente', 'En Proceso'];
+            statOrder.forEach(key => {
+                const value = fullStats[key];
+                if (value !== undefined) {
+                    const statElement = document.createElement('div');
+                    statElement.className = 'p-2 rounded-lg';
+                    statElement.innerHTML = `<p class="text-2xl font-bold text-gray-800">${value}</p><p class="text-sm text-gray-600">${key}</p>`;
+                    statsContainer.appendChild(statElement);
+                }
+            });
         }
         
-        function handleStatusChange(event, itemId) { /* ... sin cambios ... */ }
-        function handleFieldChange(event, itemId, field) { /* ... sin cambios ... */ }
-        function handleMoveTask(event, itemId) { /* ... sin cambios ... */ }
-        function handleDeleteTask(itemId) { /* ... sin cambios ... */ }
+        function renderPieChart(stats) { /* ... sin cambios ... */ }
+        function renderResponsibleChart(data) { /* ... sin cambios ... */ }
+
+        function handleStatusChange(event, itemId) { const itemIndex = checklistData.findIndex(d => d.id === itemId); if (itemIndex > -1) { checklistData[itemIndex].estado = event.target.value; saveData(); } }
+        function handleFieldChange(event, itemId, field) { const itemIndex = checklistData.findIndex(d => d.id === itemId); if (itemIndex > -1) { checklistData[itemIndex][field] = event.target.value; saveData(); } }
+        function handleMoveTask(event, itemId) { const itemIndex = checklistData.findIndex(d => d.id === itemId); if (itemIndex > -1) { checklistData[itemIndex].rubro = event.target.value; saveData(); } }
+        function handleDeleteTask(itemId) { const taskToDelete = checklistData.find(d => d.id === itemId); if (confirm(`¿Estás seguro...?`)) { checklistData = checklistData.filter(d => d.id !== itemId); saveData(); } }
         function handleToggleEdit(itemId) { /* ... sin cambios ... */ }
         function handleSaveTask(itemId) { /* ... sin cambios ... */ }
 
-        // --- OTRAS FUNCIONES (sin cambios) ---
-        function updateSummary() { /* ... */ }
-        function renderPieChart(stats) { /* ... */ }
-        function renderResponsibleChart(data) { /* ... */ }
-        function applyStatusStyles(element, status) { /* ... */ }
-        function toggleAccordion(accordionItem) { /* ... */ }
-        function exportToPDF() { /* ... */ }
+        function applyStatusStyles(element, status) { /* ... sin cambios ... */ }
+        function toggleAccordion(accordionItem) { /* ... sin cambios ... */ }
+        function exportToPDF() { /* ... sin cambios ... */ }
         
-        // --- INICIALIZACIÓN ---
         document.addEventListener('DOMContentLoaded', () => {
+            const formOverlay = document.getElementById('form-overlay');
             const addTaskForm = document.getElementById('add-task-form');
+            const addTaskBtn = document.getElementById('add-task-btn');
+            const closeFormBtn = document.getElementById('close-form-btn');
             const statusFilters = document.getElementById('status-filters');
             const priorityFilters = document.getElementById('priority-filters');
-            // ... (resto de los getElementById)
+            const exportBtn = document.getElementById('export-pdf-btn');
 
-            // ... (listeners de botones)
+            addTaskBtn.addEventListener('click', () => formOverlay.classList.add('visible'));
+            closeFormBtn.addEventListener('click', () => formOverlay.classList.remove('visible'));
             statusFilters.addEventListener('click', handleFilterClick);
             priorityFilters.addEventListener('click', handleFilterClick);
+            exportBtn.addEventListener('click', exportToPDF);
             
             addTaskForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 const formData = new FormData(addTaskForm);
                 const newTask = { 
-                    id: Date.now(), 
-                    rubro: formData.get('rubro'), 
-                    requerimiento: formData.get('requerimiento'), 
-                    responsable: formData.get('responsable'), 
+                    id: Date.now(),
+                    rubro: formData.get('rubro'),
+                    requerimiento: formData.get('requerimiento'),
+                    responsable: formData.get('responsable'),
                     deadline: formData.get('deadline'),
-                    prioridad: formData.get('prioridad'), // <-- AÑADIDO
+                    prioridad: formData.get('prioridad'),
                     estado: 'Pendiente', 
                     isEditing: false 
                 };
                 checklistData.push(newTask);
                 saveData();
                 addTaskForm.reset();
-                document.getElementById('form-overlay').classList.remove('visible');
+                formOverlay.classList.remove('visible');
             });
 
             loadData();
