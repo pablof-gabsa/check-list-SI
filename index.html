@@ -46,7 +46,7 @@
 
         @media print {
             body { background-color: white; }
-            #form-overlay, #controls, #summary, footer, .no-print, #manage-responsables-overlay, #manage-rubros-overlay { display: none !important; }
+            #form-overlay, #controls, #summary, footer, .no-print, #manage-responsables-overlay, #manage-rubros-overlay, #filter-overlay { display: none !important; }
             main, .container { padding: 0 !important; margin: 0 !important; max-width: 100% !important; }
             .accordion-content { max-height: none !important; display: block !important; }
             .bg-white { box-shadow: none !important; }
@@ -190,12 +190,61 @@
             </div>
         </div>
     </div>
+    
+    <div id="filter-overlay" class="form-overlay fixed inset-0 bg-gray-900 bg-opacity-75 items-center justify-center z-50 overflow-y-auto py-10">
+        <div class="bg-white p-8 rounded-lg shadow-2xl w-full max-w-3xl relative">
+            <button id="close-filter-btn" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-3xl">&times;</button>
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">Filtros</h2>
+            
+            <div class="space-y-6">
+                <div>
+                    <h3 class="text-md font-bold text-gray-700 mb-2">Estado</h3>
+                    <div id="status-filters" class="flex flex-wrap items-center gap-2">
+                        <button class="filter-btn active py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="status" data-filter="Todos">Todos</button>
+                        <button class="filter-btn py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="status" data-filter="Pendiente">Pendiente</button>
+                        <button class="filter-btn py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="status" data-filter="En Proceso">En Proceso</button>
+                        <button class="filter-btn py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="status" data-filter="Realizado">Realizado</button>
+                        <button class="filter-btn py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="status" data-filter="Suspendido">Suspendido</button>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-md font-bold text-gray-700 mb-2">Prioridad</h3>
+                    <div id="priority-filters" class="flex flex-wrap items-center gap-2">
+                        <button class="filter-btn active py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="priority" data-filter="Todos">Todas</button>
+                        <button class="filter-btn py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="priority" data-filter="Baja">Baja</button>
+                        <button class="filter-btn py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="priority" data-filter="Media">Media</button>
+                        <button class="filter-btn py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="priority" data-filter="Alta">Alta</button>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-md font-bold text-gray-700 mb-2">Vencimiento</h3>
+                    <div id="date-filters" class="flex flex-wrap items-center gap-2">
+                        <button class="filter-btn active py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="date" data-filter="Todas">Todas</button>
+                        <button class="filter-btn py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="date" data-filter="Vencidas">Vencidas</button>
+                        <button class="filter-btn py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="date" data-filter="Proximas">Próximas (7d)</button>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-md font-bold text-gray-700 mb-2">Responsable</h3>
+                    <div id="responsible-filters" class="flex flex-wrap items-center gap-2 max-h-40 overflow-y-auto">
+                        </div>
+                </div>
+            </div>
+            
+            <div class="flex justify-end pt-6 border-t mt-6">
+                <button id="close-filter-btn-bottom" class="bg-gray-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-gray-700 transition-colors">Cerrar</button>
+            </div>
+        </div>
+    </div>
 
 
     <div class="container mx-auto p-4 sm:p-6 lg:p-8">
         <header class="text-center mb-8">
             <h1 class="text-3xl sm:text-4xl font-bold text-institutional">Plan de trabajo SANTA ISABEL 1</h1>
-            <p class="text-xs text-gray-400 font-semibold mt-1">V 3.4</p>
+            <p class="text-xs text-gray-400 font-semibold mt-1">V 4.0</p>
             <p class="text-md text-gray-600 mt-2">Seguimiento interactivo del estado del plan de trabajo</p>
         </header>
 
@@ -204,37 +253,10 @@
                 <button id="add-task-btn" class="bg-institutional text-white font-bold py-2 px-4 rounded-lg hover:bg-opacity-90 transition-colors">+ Añadir Tarea</button>
                 <button id="manage-rubros-btn" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">Gestionar Rubros</button>
                 <button id="manage-responsables-btn" class="bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 transition-colors">Gestionar Responsables</button>
+                <button id="manage-filters-btn" class="bg-yellow-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-yellow-600 transition-colors">Filtros</button>
                 <button id="export-pdf-btn" class="bg-gray-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors">Exportar a PDF</button>
             </div>
-            <div class="border-t border-gray-200 pt-4">
-                <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                    <h3 class="text-md font-bold text-gray-700 flex-shrink-0">Filtros:</h3>
-                    <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center w-full">
-                        <div id="status-filters" class="flex flex-wrap items-center gap-2">
-                            <span class="text-sm font-semibold text-gray-600 mr-2">Estado:</span>
-                            <button class="filter-btn active py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="status" data-filter="Todos">Todos</button>
-                            <button class="filter-btn py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="status" data-filter="Pendiente">Pendiente</button>
-                            <button class="filter-btn py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="status" data-filter="En Proceso">En Proceso</button>
-                            <button class="filter-btn py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="status" data-filter="Realizado">Realizado</button>
-                            <button class="filter-btn py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="status" data-filter="Suspendido">Suspendido</button>
-                        </div>
-                        <div id="priority-filters" class="flex flex-wrap items-center gap-2 border-t sm:border-t-0 sm:border-l pt-2 sm:pt-0 sm:pl-4 mt-2 sm:mt-0">
-                            <span class="text-sm font-semibold text-gray-600 mr-2">Prioridad:</span>
-                            <button class="filter-btn active py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="priority" data-filter="Todos">Todas</button>
-                            <button class="filter-btn py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="priority" data-filter="Baja">Baja</button>
-                            <button class="filter-btn py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="priority" data-filter="Media">Media</button>
-                            <button class="filter-btn py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="priority" data-filter="Alta">Alta</button>
-                        </div>
-                        <div id="date-filters" class="flex flex-wrap items-center gap-2 border-t sm:border-t-0 sm:border-l pt-2 sm:pt-0 sm:pl-4 mt-2 sm:mt-0">
-                            <span class="text-sm font-semibold text-gray-600 mr-2">Vence:</span>
-                            <button class="filter-btn active py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="date" data-filter="Todas">Todas</button>
-                            <button class="filter-btn py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="date" data-filter="Vencidas">Vencidas</button>
-                            <button class="filter-btn py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="date" data-filter="Proximas">Próximas (7d)</button>
-                        </div>
-                    </div>
-                </div>
             </div>
-        </div>
 
         <div id="summary" class="bg-white p-6 rounded-lg shadow-md mb-8">
             <h2 class="text-xl font-bold text-gray-700 mb-4">Progreso General <span id="filter-label" class="text-base font-normal text-gray-500"></span></h2>
@@ -284,8 +306,7 @@
         let currentStatusFilter = 'Todos';
         let currentPriorityFilter = 'Todos';
         let currentDateFilter = 'Todas';
-        
-        // MODIFICADO: RASTREADOR DE ACORDEONES ABIERTOS
+        let currentResponsibleFilter = 'Todos'; // NUEVO
         let openRubros = new Set(); 
 
         // CONSTANTES GLOBALES
@@ -320,8 +341,6 @@
         const protectedResponsables = ['Administrador', 'Otros']; 
 
         
-        // MODIFICADO: Ya no se usa `saveData()` para todo.
-        
         function loadInitialData() {
             const defaultRubros = ['Operativos', 'Obras de infraestructura', 'Administrativos', 'Tramite de subdivision', 'Eliminado'];
             const defaultResponsables = ['Administrador', 'Intendente', 'Proveedor', 'Operadora', 'RRHH', 'Compras', 'Otros'];
@@ -355,6 +374,7 @@
                 
                 updateRubroDropdown();
                 updateResponsableDropdown();
+                renderFilterModal(); // NUEVO: Popular el modal de filtros
             });
         }
 
@@ -373,7 +393,7 @@
                 } else { 
                     checklistData = []; 
                 }
-                renderChecklist(); // Primera renderización (rápida)
+                renderChecklist(); 
             });
         }
         
@@ -429,15 +449,40 @@
                     responsableSelect.appendChild(option);
                 });
             }
-            // MODIFICADO: No llamar a renderChecklist() aquí
         }
+
+        // NUEVA: Función para renderizar los filtros en el modal
+        function renderFilterModal() {
+            const container = document.getElementById('responsible-filters');
+            container.innerHTML = ''; // Limpiar
+            
+            // Botón Todos
+            const allBtn = document.createElement('button');
+            allBtn.className = 'filter-btn active py-1 px-3 rounded-full text-sm transition-colors border';
+            allBtn.dataset.filterType = 'responsible';
+            allBtn.dataset.filter = 'Todos';
+            allBtn.textContent = 'Todos';
+            container.appendChild(allBtn);
+
+            // Botones por responsable
+            responsables.forEach(resp => {
+                const respBtn = document.createElement('button');
+                respBtn.className = 'filter-btn py-1 px-3 rounded-full text-sm transition-colors border';
+                respBtn.dataset.filterType = 'responsible';
+                respBtn.dataset.filter = resp;
+                respBtn.textContent = resp;
+                container.appendChild(respBtn);
+            });
+        }
+
 
         function getFilteredData() {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             let filtered = checklistData.filter(item => 
                 (currentStatusFilter === 'Todos' || item.estado === currentStatusFilter) &&
-                (currentPriorityFilter === 'Todos' || item.prioridad === currentPriorityFilter)
+                (currentPriorityFilter === 'Todos' || item.prioridad === currentPriorityFilter) &&
+                (currentResponsibleFilter === 'Todos' || item.responsable === currentResponsibleFilter) // NUEVO FILTRO
             );
             if (currentDateFilter !== 'Todas') {
                 filtered = filtered.filter(item => {
@@ -457,12 +502,9 @@
             return filtered;
         }
 
-        // MODIFICADO: Lógica de renderizado optimizada (On-Demand)
         function renderChecklist() {
             const container = document.getElementById('checklist-container');
-            
-            // Guardar estado de acordeones abiertos
-            const currentOpenRubros = new Set(openRubros);
+            const currentOpenRubros = new Set(openRubros); 
             
             container.innerHTML = '';
             const fragment = document.createDocumentFragment();
@@ -483,7 +525,7 @@
                 const header = document.createElement('div');
                 header.className = 'p-4 flex justify-between items-center cursor-pointer hover:bg-gray-50';
                 header.onclick = (event) => { if (!event.target.closest('.no-toggle')) { toggleAccordion(header); } };
-                header.dataset.rubro = rubro; // Guardar el nombre del rubro aquí
+                header.dataset.rubro = rubro; 
 
                 let overdueIndicator = '';
                 const hasOverdue = itemsInRubro.some(item => {
@@ -503,9 +545,8 @@
                 const content = document.createElement('div');
                 content.className = 'accordion-content border-t border-gray-200';
                 
-                // --- INICIO DE RENDERIZADO BAJO DEMANDA ---
                 if (currentOpenRubros.has(rubro)) {
-                    content.classList.add('open'); // Abrir si estaba en el set
+                    content.classList.add('open'); 
 
                     if (itemsToShow.length === 0) {
                          content.innerHTML = `<p class="text-center text-gray-500 p-4">No hay tareas que coincidan con los filtros actuales.</p>`;
@@ -608,20 +649,22 @@
                         content.appendChild(list);
                     }
                 }
-                // --- FIN DE RENDERIZADO BAJO DEMANDA ---
                 
                 accordionItem.appendChild(header);
                 accordionItem.appendChild(content);
                 fragment.appendChild(accordionItem); 
             });
             
-            container.appendChild(fragment);
-            
+            container.appendChild(fragment); 
             updateSummary();
         }
 
         function updateSummary() {
-            const dataToSummarize = getFilteredData();
+            // Optimización: Solo filtrar si es necesario (si los filtros no son "Todos")
+            const dataToSummarize = (currentStatusFilter === 'Todos' && currentPriorityFilter === 'Todos' && currentDateFilter === 'Todas' && currentResponsibleFilter === 'Todos') 
+                                   ? checklistData 
+                                   : getFilteredData();
+                                   
             const total = dataToSummarize.length;
             const stats = dataToSummarize.reduce((acc, item) => { (acc[item.estado] = (acc[item.estado] || 0) + 1); return acc; }, {});
             const okCount = stats['Realizado'] || 0;
@@ -631,9 +674,12 @@
             if (currentStatusFilter !== 'Todos') filterText.push(`Estado: ${currentStatusFilter}`);
             if (currentPriorityFilter !== 'Todos') filterText.push(`Prioridad: ${currentPriorityFilter}`);
             if (currentDateFilter !== 'Todas') filterText.push(`Vence: ${currentDateFilter}`);
+            if (currentResponsibleFilter !== 'Todos') filterText.push(`Resp: ${currentResponsibleFilter}`); // NUEVO
             document.getElementById('filter-label').textContent = filterText.length > 0 ? `(${filterText.join(', ')})` : '';
+            
             renderPieChart(stats);
             renderResponsibleChart(dataToSummarize);
+            
             const statsContainer = document.getElementById('stats');
             statsContainer.innerHTML = '';
             const fullStats = {'Total': total, 'Realizado': okCount, ...stats};
@@ -667,16 +713,25 @@
             responsibleChart = new Chart(ctx, { type: 'bar', data: { labels: labels, datasets: [{ label: 'Tareas Asignadas', data: chartData, backgroundColor: 'rgba(0, 153, 153, 0.6)', borderColor: 'rgba(0, 153, 153, 1)', borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false }, title: { display: true, text: 'Tareas por Responsable' } } } });
         }
 
+        // MODIFICADO: Maneja el nuevo filtro de responsable
         function handleFilterClick(event) {
-            const filterType = event.target.dataset.filterType;
-            const filterValue = event.target.dataset.filter;
+            const target = event.target.closest('.filter-btn');
+            if (!target) return; // No es un botón de filtro
+            
+            const filterType = target.dataset.filterType;
+            const filterValue = target.dataset.filter;
+            
             if (filterType) {
                 if (filterType === 'status') currentStatusFilter = filterValue;
                 else if (filterType === 'priority') currentPriorityFilter = filterValue;
                 else if (filterType === 'date') currentDateFilter = filterValue;
+                else if (filterType === 'responsible') currentResponsibleFilter = filterValue;
                 
-                document.querySelectorAll(`[data-filter-type="${filterType}"]`).forEach(btn => btn.classList.remove('active'));
-                event.target.classList.add('active');
+                // Actualizar UI del modal de filtros
+                const filterGroup = target.closest('.flex');
+                filterGroup.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                target.classList.add('active');
+                
                 renderChecklist();
             }
         }
@@ -894,6 +949,7 @@
                 database.ref('responsables').set(responsables).then(() => {
                     renderResponsablesModal(); 
                     updateResponsableDropdown();
+                    renderFilterModal(); // Actualizar modal de filtros
                 });
                 input.value = '';
             }
@@ -981,6 +1037,7 @@
             database.ref().update(updates).then(() => {
                 renderResponsablesModal(); 
                 updateResponsableDropdown();
+                renderFilterModal(); // Actualizar modal de filtros
             });
         }
         
@@ -995,6 +1052,7 @@
                 database.ref('responsables').set(responsables).then(() => {
                     renderResponsablesModal();
                     updateResponsableDropdown();
+                    renderFilterModal(); // Actualizar modal de filtros
                 });
             }
         }
@@ -1002,7 +1060,6 @@
 
         function applyStatusStyles(element, status) { element.className = element.className.split(' ').filter(c => !Object.values(statusOptions).join(' ').includes(c)).join(' '); const styles = statusOptions[status] || 'bg-gray-100 text-gray-800 border-gray-300'; element.classList.add(...styles.split(' ')); }
         
-        // MODIFICADO: Lógica de renderizado bajo demanda
         function toggleAccordion(headerElement) {
             const rubroName = headerElement.dataset.rubro;
             if (!rubroName) return;
@@ -1012,20 +1069,16 @@
             } else {
                 openRubros.add(rubroName);
             }
-            renderChecklist(); // Re-renderizar todo, pero será rápido
+            renderChecklist(); 
         }
 
         function exportToPDF() {
-            // Mostrar todos los rubros para la impresión
             openRubros = new Set(rubros);
-            renderChecklist(); // Renderizar todo el contenido
+            renderChecklist(); 
 
             setTimeout(() => {
                 window.print();
-                // Opcional: volver al estado anterior después de imprimir
-                // openRubros = new Set(); 
-                // renderChecklist();
-            }, 500); // Dar tiempo para que el DOM se actualice
+            }, 500);
         }
         
         function updateRecurrenceUI(type) {
@@ -1040,21 +1093,31 @@
             const addTaskForm = document.getElementById('add-task-form');
             const addTaskBtn = document.getElementById('add-task-btn');
             const closeFormBtn = document.getElementById('close-form-btn');
-            const statusFilters = document.getElementById('status-filters');
-            const priorityFilters = document.getElementById('priority-filters');
-            const dateFilters = document.getElementById('date-filters');
             const exportBtn = document.getElementById('export-pdf-btn');
             const recurrenceTypeSelect = document.getElementById('recurrence-type');
+            const checklistContainer = document.getElementById('checklist-container'); 
             
+            // --- Gestión Rubros ---
             const manageRubrosBtn = document.getElementById('manage-rubros-btn');
             const closeManageRubrosBtn = document.getElementById('close-manage-rubros-btn');
             const rubrosListContainer = document.getElementById('rubros-list-container');
             const addRubroForm = document.getElementById('add-rubro-form');
             
+            // --- Gestión Responsables ---
             const manageResponsablesBtn = document.getElementById('manage-responsables-btn');
             const closeManageResponsablesBtn = document.getElementById('close-manage-responsables-btn');
             const responsablesListContainer = document.getElementById('responsables-list-container');
             const addResponsableForm = document.getElementById('add-responsable-form');
+
+            // --- Gestión Filtros ---
+            const filterOverlay = document.getElementById('filter-overlay');
+            const manageFiltersBtn = document.getElementById('manage-filters-btn');
+            const closeFilterBtn = document.getElementById('close-filter-btn');
+            const closeFilterBtnBottom = document.getElementById('close-filter-btn-bottom');
+            const statusFilters = document.getElementById('status-filters');
+            const priorityFilters = document.getElementById('priority-filters');
+            const dateFilters = document.getElementById('date-filters');
+            const responsibleFilters = document.getElementById('responsible-filters');
 
             // --- Listeners Tareas ---
             addTaskBtn.addEventListener('click', () => {
@@ -1091,17 +1154,13 @@
                     database.ref('tasks').child(editId).update(taskData);
                 } else {
                     const newId = database.ref('tasks').push().key;
-                    const newTask = { ...taskData, id: newId, estado: 'Pendiente' };
-                    database.ref('tasks').child(newId).set(newTask);
+                    database.ref('tasks').child(newId).set({ ...taskData, estado: 'Pendiente' });
                 }
                 addTaskForm.reset();
                 formOverlay.classList.remove('visible');
             });
 
             // --- Listeners Controles ---
-            statusFilters.addEventListener('click', handleFilterClick);
-            priorityFilters.addEventListener('click', handleFilterClick);
-            dateFilters.addEventListener('click', handleFilterClick);
             exportBtn.addEventListener('click', exportToPDF);
             
             // --- Listeners Gestión Rubros ---
@@ -1125,6 +1184,19 @@
                 if (editButton) handleEditResponsable(editButton.dataset.responsableName);
                 if (deleteButton) handleDeleteResponsable(deleteButton.dataset.responsableName);
             });
+
+            // --- Listeners Gestión Filtros ---
+            manageFiltersBtn.addEventListener('click', () => {
+                renderFilterModal(); // Asegura que los responsables estén actualizados
+                filterOverlay.classList.add('visible');
+            });
+            closeFilterBtn.addEventListener('click', () => filterOverlay.classList.remove('visible'));
+            closeFilterBtnBottom.addEventListener('click', () => filterOverlay.classList.remove('visible'));
+            statusFilters.addEventListener('click', handleFilterClick);
+            priorityFilters.addEventListener('click', handleFilterClick);
+            dateFilters.addEventListener('click', handleFilterClick);
+            responsibleFilters.addEventListener('click', handleFilterClick);
+
 
             // Carga Inicial
             loadInitialData();
