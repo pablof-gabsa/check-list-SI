@@ -9,6 +9,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
     <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-database-compat.js"></script>
 
@@ -46,7 +48,7 @@
 
         @media print {
             body { background-color: white; }
-            #form-overlay, #controls, #summary, footer, .no-print, #manage-responsables-overlay, #manage-rubros-overlay, #filter-overlay { display: none !important; }
+            #form-overlay, #controls, #summary, footer, .no-print, #manage-responsables-overlay, #manage-rubros-overlay, #filter-overlay, #import-overlay { display: none !important; }
             main, .container { padding: 0 !important; margin: 0 !important; max-width: 100% !important; }
             .accordion-content { max-height: none !important; display: block !important; }
             .bg-white { box-shadow: none !important; }
@@ -58,7 +60,14 @@
     <div id="form-overlay" class="form-overlay fixed inset-0 bg-gray-900 bg-opacity-75 items-center justify-center z-50 overflow-y-auto py-10">
         <div class="bg-white p-8 rounded-lg shadow-2xl w-full max-w-2xl relative">
             <button id="close-form-btn" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-3xl">&times;</button>
-            <h2 id="form-title" class="text-2xl font-bold mb-6 text-gray-800">Añadir Nueva Tarea</h2>
+            
+            <div class="flex justify-between items-baseline mb-6">
+                <h2 id="form-title" class="text-2xl font-bold text-gray-800">Añadir Nueva Tarea</h2>
+                <button type="button" id="show-import-modal-btn" class="text-sm text-institutional hover:underline focus:outline-none no-print">
+                    o Importar desde CSV
+                </button>
+            </div>
+            
             <form id="add-task-form" class="space-y-4">
                 <input type="hidden" id="edit-task-id" name="edit-task-id">
                 <div>
@@ -195,7 +204,6 @@
         <div class="bg-white p-8 rounded-lg shadow-2xl w-full max-w-3xl relative">
             <button id="close-filter-btn" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-3xl">&times;</button>
             <h2 class="text-2xl font-bold mb-6 text-gray-800">Filtros</h2>
-            
             <div class="space-y-6">
                 <div>
                     <h3 class="text-md font-bold text-gray-700 mb-2">Estado</h3>
@@ -207,7 +215,6 @@
                         <button class="filter-btn py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="status" data-filter="Suspendido">Suspendido</button>
                     </div>
                 </div>
-
                 <div>
                     <h3 class="text-md font-bold text-gray-700 mb-2">Prioridad</h3>
                     <div id="priority-filters" class="flex flex-wrap items-center gap-2">
@@ -217,25 +224,52 @@
                         <button class="filter-btn py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="priority" data-filter="Alta">Alta</button>
                     </div>
                 </div>
-
                 <div>
                     <h3 class="text-md font-bold text-gray-700 mb-2">Vencimiento</h3>
                     <div id="date-filters" class="flex flex-wrap items-center gap-2">
                         <button class="filter-btn active py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="date" data-filter="Todas">Todas</button>
                         <button class="filter-btn py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="date" data-filter="Vencidas">Vencidas</button>
+                        <button class="filter-btn py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="date" data-filter="Hoy">Vencen Hoy</button>
+                        <button class="filter-btn py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="date" data-filter="Este Mes">Vencen este mes</button>
                         <button class="filter-btn py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="date" data-filter="Proximas">Próximas (7d)</button>
                     </div>
                 </div>
-
                 <div>
                     <h3 class="text-md font-bold text-gray-700 mb-2">Responsable</h3>
                     <div id="responsible-filters" class="flex flex-wrap items-center gap-2 max-h-40 overflow-y-auto">
-                        </div>
+                    </div>
                 </div>
             </div>
-            
             <div class="flex justify-end pt-6 border-t mt-6">
                 <button id="close-filter-btn-bottom" class="bg-gray-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-gray-700 transition-colors">Cerrar</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="import-overlay" class="form-overlay fixed inset-0 bg-gray-900 bg-opacity-75 items-center justify-center z-50 overflow-y-auto py-10">
+        <div class="bg-white p-8 rounded-lg shadow-2xl w-full max-w-lg relative">
+            <button id="close-import-btn" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-3xl">&times;</button>
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">Importar Tareas</h2>
+            
+            <div class="space-y-6">
+                <div>
+                    <p class="text-sm text-gray-600 mb-2">Suba un archivo CSV. Puede descargar la plantilla para asegurarse de que el formato sea correcto.</p>
+                    <button id="download-template-btn" class="text-sm bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
+                        Descargar Plantilla CSV
+                    </button>
+                </div>
+                
+                <div class="border-t pt-4">
+                    <label for="csv-file-input" class="block text-sm font-medium text-gray-700 mb-2">Seleccionar archivo .csv</label>
+                    <input type="file" id="csv-file-input" name="csv-file-input" accept=".csv" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-institutional/10 file:text-institutional hover:file:bg-institutional/20">
+                </div>
+                
+                <div id="import-feedback" class="text-sm text-red-600"></div>
+
+                <div class="flex justify-end pt-6 border-t mt-6 gap-4">
+                    <button id="close-import-btn-bottom" class="bg-gray-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-gray-700 transition-colors">Cerrar</button>
+                    <button id="process-import-btn" class="bg-purple-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-purple-700 transition-colors">Procesar Importación</button>
+                </div>
             </div>
         </div>
     </div>
@@ -244,7 +278,7 @@
     <div class="container mx-auto p-4 sm:p-6 lg:p-8">
         <header class="text-center mb-8">
             <h1 class="text-3xl sm:text-4xl font-bold text-institutional">Plan de trabajo SANTA ISABEL 1</h1>
-            <p class="text-xs text-gray-400 font-semibold mt-1">V 4.0</p>
+            <p class="text-xs text-gray-400 font-semibold mt-1">V 5.0</p>
             <p class="text-md text-gray-600 mt-2">Seguimiento interactivo del estado del plan de trabajo</p>
         </header>
 
@@ -256,7 +290,7 @@
                 <button id="manage-filters-btn" class="bg-yellow-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-yellow-600 transition-colors">Filtros</button>
                 <button id="export-pdf-btn" class="bg-gray-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors">Exportar a PDF</button>
             </div>
-            </div>
+        </div>
 
         <div id="summary" class="bg-white p-6 rounded-lg shadow-md mb-8">
             <h2 class="text-xl font-bold text-gray-700 mb-4">Progreso General <span id="filter-label" class="text-base font-normal text-gray-500"></span></h2>
@@ -306,7 +340,7 @@
         let currentStatusFilter = 'Todos';
         let currentPriorityFilter = 'Todos';
         let currentDateFilter = 'Todas';
-        let currentResponsibleFilter = 'Todos'; // NUEVO
+        let currentResponsibleFilter = 'Todos';
         let openRubros = new Set(); 
 
         // CONSTANTES GLOBALES
@@ -374,7 +408,7 @@
                 
                 updateRubroDropdown();
                 updateResponsableDropdown();
-                renderFilterModal(); // NUEVO: Popular el modal de filtros
+                renderFilterModal(); 
             });
         }
 
@@ -451,23 +485,20 @@
             }
         }
 
-        // NUEVA: Función para renderizar los filtros en el modal
         function renderFilterModal() {
             const container = document.getElementById('responsible-filters');
-            container.innerHTML = ''; // Limpiar
+            container.innerHTML = ''; 
             
-            // Botón Todos
             const allBtn = document.createElement('button');
-            allBtn.className = 'filter-btn active py-1 px-3 rounded-full text-sm transition-colors border';
+            allBtn.className = `filter-btn py-1 px-3 rounded-full text-sm transition-colors border ${currentResponsibleFilter === 'Todos' ? 'active' : ''}`;
             allBtn.dataset.filterType = 'responsible';
             allBtn.dataset.filter = 'Todos';
             allBtn.textContent = 'Todos';
             container.appendChild(allBtn);
 
-            // Botones por responsable
             responsables.forEach(resp => {
                 const respBtn = document.createElement('button');
-                respBtn.className = 'filter-btn py-1 px-3 rounded-full text-sm transition-colors border';
+                respBtn.className = `filter-btn py-1 px-3 rounded-full text-sm transition-colors border ${currentResponsibleFilter === resp ? 'active' : ''}`;
                 respBtn.dataset.filterType = 'responsible';
                 respBtn.dataset.filter = resp;
                 respBtn.textContent = resp;
@@ -479,24 +510,35 @@
         function getFilteredData() {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
+            const currentMonth = today.getMonth();
+            const currentYear = today.getFullYear();
+
             let filtered = checklistData.filter(item => 
                 (currentStatusFilter === 'Todos' || item.estado === currentStatusFilter) &&
                 (currentPriorityFilter === 'Todos' || item.prioridad === currentPriorityFilter) &&
-                (currentResponsibleFilter === 'Todos' || item.responsable === currentResponsibleFilter) // NUEVO FILTRO
+                (currentResponsibleFilter === 'Todos' || item.responsable === currentResponsibleFilter)
             );
+            
             if (currentDateFilter !== 'Todas') {
                 filtered = filtered.filter(item => {
                     if (!item.deadline) return false;
                     const taskDate = new Date(item.deadline + 'T00:00:00');
-                    if (currentDateFilter === 'Vencidas') {
-                        return taskDate < today && item.estado !== 'Realizado' && item.estado !== 'Suspendido';
+                    if (!taskDate || isNaN(taskDate)) return false; // Comprobar fecha inválida
+
+                    switch (currentDateFilter) {
+                        case 'Vencidas':
+                            return taskDate.getTime() < today.getTime() && item.estado !== 'Realizado' && item.estado !== 'Suspendido';
+                        case 'Hoy':
+                            return taskDate.getTime() === today.getTime();
+                        case 'Este Mes':
+                            return taskDate.getMonth() === currentMonth && taskDate.getFullYear() === currentYear;
+                        case 'Proximas':
+                            const sevenDaysFromNow = new Date(today);
+                            sevenDaysFromNow.setDate(today.getDate() + 7);
+                            return taskDate.getTime() > today.getTime() && taskDate.getTime() <= sevenDaysFromNow.getTime();
+                        default:
+                            return true;
                     }
-                    if (currentDateFilter === 'Proximas') {
-                        const sevenDaysFromNow = new Date(today);
-                        sevenDaysFromNow.setDate(today.getDate() + 7);
-                        return taskDate >= today && taskDate <= sevenDaysFromNow;
-                    }
-                    return true;
                 });
             }
             return filtered;
@@ -660,11 +702,7 @@
         }
 
         function updateSummary() {
-            // Optimización: Solo filtrar si es necesario (si los filtros no son "Todos")
-            const dataToSummarize = (currentStatusFilter === 'Todos' && currentPriorityFilter === 'Todos' && currentDateFilter === 'Todas' && currentResponsibleFilter === 'Todos') 
-                                   ? checklistData 
-                                   : getFilteredData();
-                                   
+            const dataToSummarize = getFilteredData();
             const total = dataToSummarize.length;
             const stats = dataToSummarize.reduce((acc, item) => { (acc[item.estado] = (acc[item.estado] || 0) + 1); return acc; }, {});
             const okCount = stats['Realizado'] || 0;
@@ -674,12 +712,10 @@
             if (currentStatusFilter !== 'Todos') filterText.push(`Estado: ${currentStatusFilter}`);
             if (currentPriorityFilter !== 'Todos') filterText.push(`Prioridad: ${currentPriorityFilter}`);
             if (currentDateFilter !== 'Todas') filterText.push(`Vence: ${currentDateFilter}`);
-            if (currentResponsibleFilter !== 'Todos') filterText.push(`Resp: ${currentResponsibleFilter}`); // NUEVO
+            if (currentResponsibleFilter !== 'Todos') filterText.push(`Resp: ${currentResponsibleFilter}`);
             document.getElementById('filter-label').textContent = filterText.length > 0 ? `(${filterText.join(', ')})` : '';
-            
             renderPieChart(stats);
             renderResponsibleChart(dataToSummarize);
-            
             const statsContainer = document.getElementById('stats');
             statsContainer.innerHTML = '';
             const fullStats = {'Total': total, 'Realizado': okCount, ...stats};
@@ -713,10 +749,9 @@
             responsibleChart = new Chart(ctx, { type: 'bar', data: { labels: labels, datasets: [{ label: 'Tareas Asignadas', data: chartData, backgroundColor: 'rgba(0, 153, 153, 0.6)', borderColor: 'rgba(0, 153, 153, 1)', borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false }, title: { display: true, text: 'Tareas por Responsable' } } } });
         }
 
-        // MODIFICADO: Maneja el nuevo filtro de responsable
         function handleFilterClick(event) {
             const target = event.target.closest('.filter-btn');
-            if (!target) return; // No es un botón de filtro
+            if (!target) return; 
             
             const filterType = target.dataset.filterType;
             const filterValue = target.dataset.filter;
@@ -727,10 +762,11 @@
                 else if (filterType === 'date') currentDateFilter = filterValue;
                 else if (filterType === 'responsible') currentResponsibleFilter = filterValue;
                 
-                // Actualizar UI del modal de filtros
-                const filterGroup = target.closest('.flex');
-                filterGroup.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-                target.classList.add('active');
+                const filterGroup = target.closest('.flex-wrap');
+                if (filterGroup) {
+                    filterGroup.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                    target.classList.add('active');
+                }
                 
                 renderChecklist();
             }
@@ -949,7 +985,7 @@
                 database.ref('responsables').set(responsables).then(() => {
                     renderResponsablesModal(); 
                     updateResponsableDropdown();
-                    renderFilterModal(); // Actualizar modal de filtros
+                    renderFilterModal(); 
                 });
                 input.value = '';
             }
@@ -1037,7 +1073,7 @@
             database.ref().update(updates).then(() => {
                 renderResponsablesModal(); 
                 updateResponsableDropdown();
-                renderFilterModal(); // Actualizar modal de filtros
+                renderFilterModal(); 
             });
         }
         
@@ -1052,11 +1088,114 @@
                 database.ref('responsables').set(responsables).then(() => {
                     renderResponsablesModal();
                     updateResponsableDropdown();
-                    renderFilterModal(); // Actualizar modal de filtros
+                    renderFilterModal(); 
                 });
             }
         }
-        // --- FIN FUNCIONES DE GESTIÓN ---
+        
+        // --- FUNCIONES DE IMPORTACIÓN ---
+        
+        function handleDownloadTemplate() {
+            const headers = "requerimiento;rubro;responsable;prioridad;deadline";
+            const example = "Reparar luminaria sector 1;Operativos;Intendente;Alta;01/12/2025";
+            const csvContent = "data:text/csv;charset=utf-8," + headers + "\n" + example;
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "plantilla_tareas.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function handleProcessImport() {
+            const fileInput = document.getElementById('csv-file-input');
+            const file = fileInput.files[0];
+            const feedback = document.getElementById('import-feedback');
+            
+            if (!file) {
+                feedback.textContent = "Por favor, selecciona un archivo .csv primero.";
+                return;
+            }
+            
+            feedback.textContent = ""; 
+            
+            Papa.parse(file, {
+                header: true,
+                skipEmptyLines: true,
+                delimiter: ";", 
+                complete: (results) => {
+                    processCSVData(results.data);
+                },
+                error: (err) => {
+                    feedback.textContent = "Error al leer el archivo: " + err.message;
+                }
+            });
+        }
+
+        function parseCSVDate(dateString) {
+            if (!dateString) return '';
+            const parts = dateString.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/);
+            if (!parts) return ''; 
+
+            const day = parts[1].padStart(2, '0');
+            const month = parts[2].padStart(2, '0');
+            const year = parts[3];
+            
+            return `${year}-${month}-${day}`;
+        }
+
+        function processCSVData(data) {
+            const updates = {};
+            let addedCount = 0;
+            const validPriorities = ['Baja', 'Media', 'Alta']; 
+
+            data.forEach((row) => {
+                const req = row.requerimiento ? row.requerimiento.trim() : '';
+                if (!req) return; 
+
+                let rubro = row.rubro ? row.rubro.trim() : '';
+                if (!rubros.includes(rubro) || rubro === 'Eliminado') {
+                    rubro = 'Operativos';
+                }
+
+                let resp = row.responsable ? row.responsable.trim() : '';
+                if (!responsables.includes(resp)) {
+                    resp = 'Otros';
+                }
+
+                let prio = row.prioridad ? row.prioridad.trim() : '';
+                const prioFound = validPriorities.find(p => p.toLowerCase() === prio.toLowerCase());
+                prio = prioFound || 'Baja';
+
+                let deadline = parseCSVDate(row.deadline ? row.deadline.trim() : '');
+
+                const newId = database.ref('tasks').push().key;
+                const newTask = {
+                    requerimiento: req,
+                    rubro: rubro,
+                    responsable: resp,
+                    prioridad: prio,
+                    deadline: deadline,
+                    estado: 'Pendiente',
+                    recurrence: { type: 'none' }
+                };
+                updates[`/tasks/${newId}`] = newTask;
+                addedCount++;
+            });
+
+            if (addedCount > 0) {
+                database.ref().update(updates).then(() => {
+                    alert(`${addedCount} tarea(s) importada(s) exitosamente.`);
+                    document.getElementById('csv-file-input').value = ''; 
+                    document.getElementById('import-overlay').classList.remove('visible');
+                });
+            } else {
+                document.getElementById('import-feedback').textContent = "No se encontraron tareas válidas para importar. Asegúrate de que la columna 'requerimiento' esté completa.";
+            }
+        }
+
+        // --- FIN FUNCIONES DE IMPORTACIÓN ---
 
         function applyStatusStyles(element, status) { element.className = element.className.split(' ').filter(c => !Object.values(statusOptions).join(' ').includes(c)).join(' '); const styles = statusOptions[status] || 'bg-gray-100 text-gray-800 border-gray-300'; element.classList.add(...styles.split(' ')); }
         
@@ -1095,21 +1234,17 @@
             const closeFormBtn = document.getElementById('close-form-btn');
             const exportBtn = document.getElementById('export-pdf-btn');
             const recurrenceTypeSelect = document.getElementById('recurrence-type');
-            const checklistContainer = document.getElementById('checklist-container'); 
             
-            // --- Gestión Rubros ---
             const manageRubrosBtn = document.getElementById('manage-rubros-btn');
             const closeManageRubrosBtn = document.getElementById('close-manage-rubros-btn');
             const rubrosListContainer = document.getElementById('rubros-list-container');
             const addRubroForm = document.getElementById('add-rubro-form');
             
-            // --- Gestión Responsables ---
             const manageResponsablesBtn = document.getElementById('manage-responsables-btn');
             const closeManageResponsablesBtn = document.getElementById('close-manage-responsables-btn');
             const responsablesListContainer = document.getElementById('responsables-list-container');
             const addResponsableForm = document.getElementById('add-responsable-form');
 
-            // --- Gestión Filtros ---
             const filterOverlay = document.getElementById('filter-overlay');
             const manageFiltersBtn = document.getElementById('manage-filters-btn');
             const closeFilterBtn = document.getElementById('close-filter-btn');
@@ -1118,6 +1253,24 @@
             const priorityFilters = document.getElementById('priority-filters');
             const dateFilters = document.getElementById('date-filters');
             const responsibleFilters = document.getElementById('responsible-filters');
+
+            const importOverlay = document.getElementById('import-overlay');
+            const showImportModalBtn = document.getElementById('show-import-modal-btn'); 
+            const closeImportBtn = document.getElementById('close-import-btn');
+            const closeImportBtnBottom = document.getElementById('close-import-btn-bottom');
+            const downloadTemplateBtn = document.getElementById('download-template-btn');
+            const processImportBtn = document.getElementById('process-import-btn');
+
+            // --- Listeners de Importación ---
+            showImportModalBtn.addEventListener('click', () => { 
+                formOverlay.classList.remove('visible');
+                importOverlay.classList.add('visible');
+            });
+            closeImportBtn.addEventListener('click', () => importOverlay.classList.remove('visible'));
+            closeImportBtnBottom.addEventListener('click', () => importOverlay.classList.remove('visible'));
+            downloadTemplateBtn.addEventListener('click', handleDownloadTemplate);
+            processImportBtn.addEventListener('click', handleProcessImport);
+
 
             // --- Listeners Tareas ---
             addTaskBtn.addEventListener('click', () => {
@@ -1187,7 +1340,7 @@
 
             // --- Listeners Gestión Filtros ---
             manageFiltersBtn.addEventListener('click', () => {
-                renderFilterModal(); // Asegura que los responsables estén actualizados
+                renderFilterModal(); 
                 filterOverlay.classList.add('visible');
             });
             closeFilterBtn.addEventListener('click', () => filterOverlay.classList.remove('visible'));
@@ -1196,7 +1349,6 @@
             priorityFilters.addEventListener('click', handleFilterClick);
             dateFilters.addEventListener('click', handleFilterClick);
             responsibleFilters.addEventListener('click', handleFilterClick);
-
 
             // Carga Inicial
             loadInitialData();

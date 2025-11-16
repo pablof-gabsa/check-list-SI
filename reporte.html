@@ -21,7 +21,7 @@
         .accordion-content.open { max-height: 5000px; }
         .filter-btn.active { background-color: #009999; color: white; border-color: #009999;}
         
-        .form-overlay { display: none; } /* Ocultar modal de filtros por defecto */
+        .form-overlay { display: none; } 
         .form-overlay.visible { display: flex; }
 
         @media print {
@@ -39,7 +39,6 @@
         <div class="bg-white p-8 rounded-lg shadow-2xl w-full max-w-3xl relative">
             <button id="close-filter-btn" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-3xl">&times;</button>
             <h2 class="text-2xl font-bold mb-6 text-gray-800">Filtros</h2>
-            
             <div class="space-y-6">
                 <div>
                     <h3 class="text-md font-bold text-gray-700 mb-2">Estado</h3>
@@ -51,7 +50,6 @@
                         <button class="filter-btn py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="status" data-filter="Suspendido">Suspendido</button>
                     </div>
                 </div>
-
                 <div>
                     <h3 class="text-md font-bold text-gray-700 mb-2">Prioridad</h3>
                     <div id="priority-filters" class="flex flex-wrap items-center gap-2">
@@ -61,34 +59,32 @@
                         <button class="filter-btn py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="priority" data-filter="Alta">Alta</button>
                     </div>
                 </div>
-
                 <div>
                     <h3 class="text-md font-bold text-gray-700 mb-2">Vencimiento</h3>
                     <div id="date-filters" class="flex flex-wrap items-center gap-2">
                         <button class="filter-btn active py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="date" data-filter="Todas">Todas</button>
                         <button class="filter-btn py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="date" data-filter="Vencidas">Vencidas</button>
+                        <button class="filter-btn py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="date" data-filter="Hoy">Vencen Hoy</button>
+                        <button class="filter-btn py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="date" data-filter="Este Mes">Vencen este mes</button>
                         <button class="filter-btn py-1 px-3 rounded-full text-sm transition-colors border" data-filter-type="date" data-filter="Proximas">Próximas (7d)</button>
                     </div>
                 </div>
-
                 <div>
                     <h3 class="text-md font-bold text-gray-700 mb-2">Responsable</h3>
                     <div id="responsible-filters" class="flex flex-wrap items-center gap-2 max-h-40 overflow-y-auto">
-                        </div>
+                    </div>
                 </div>
             </div>
-            
             <div class="flex justify-end pt-6 border-t mt-6">
                 <button id="close-filter-btn-bottom" class="bg-gray-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-gray-700 transition-colors">Cerrar</button>
             </div>
         </div>
     </div>
-
-
+    
     <div class="container mx-auto p-4 sm:p-6 lg:p-8">
         <header class="text-center mb-8">
             <h1 class="text-3xl sm:text-4xl font-bold text-institutional">Plan de trabajo SANTA ISABEL 1</h1>
-            <p class="text-xs text-gray-400 font-semibold mt-1">V 4.0</p>
+            <p class="text-xs text-gray-400 font-semibold mt-1">V 5.0</p>
             <p class="text-md text-gray-600 mt-2">Seguimiento interactivo del estado del plan de trabajo (Modo solo lectura)</p>
         </header>
 
@@ -98,7 +94,7 @@
                 <button id="manage-filters-btn" class="bg-yellow-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-yellow-600 transition-colors">Filtros</button>
                 <button id="export-pdf-btn" class="bg-gray-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors">Exportar a PDF</button>
             </div>
-            </div>
+        </div>
 
         <div id="summary" class="bg-white p-6 rounded-lg shadow-md mb-8">
             <h2 class="text-xl font-bold text-gray-700 mb-4">Progreso General <span id="filter-label" class="text-base font-normal text-gray-500"></span></h2>
@@ -142,13 +138,13 @@
 
         let checklistData = [];
         let rubros = []; 
-        let responsables = []; // NUEVO
+        let responsables = []; 
         let statusChart = null;
         let responsibleChart = null; 
         let currentStatusFilter = 'Todos';
         let currentPriorityFilter = 'Todos';
         let currentDateFilter = 'Todas';
-        let currentResponsibleFilter = 'Todos'; // NUEVO
+        let currentResponsibleFilter = 'Todos'; 
         let openRubros = new Set(); 
 
         const statusOptions = { 
@@ -204,7 +200,7 @@
                 
                 loadTasks();
                 listenForTaskChanges();
-                renderFilterModal(); // Renderizar filtros del modal
+                renderFilterModal(); 
             });
         }
 
@@ -248,13 +244,12 @@
             });
         }
         
-        // NUEVA: Función para renderizar los filtros en el modal
         function renderFilterModal() {
             const container = document.getElementById('responsible-filters');
             container.innerHTML = ''; 
             
             const allBtn = document.createElement('button');
-            allBtn.className = 'filter-btn active py-1 px-3 rounded-full text-sm transition-colors border';
+            allBtn.className = `filter-btn py-1 px-3 rounded-full text-sm transition-colors border ${currentResponsibleFilter === 'Todos' ? 'active' : ''}`;
             allBtn.dataset.filterType = 'responsible';
             allBtn.dataset.filter = 'Todos';
             allBtn.textContent = 'Todos';
@@ -262,7 +257,7 @@
 
             responsables.forEach(resp => {
                 const respBtn = document.createElement('button');
-                respBtn.className = 'filter-btn py-1 px-3 rounded-full text-sm transition-colors border';
+                respBtn.className = `filter-btn py-1 px-3 rounded-full text-sm transition-colors border ${currentResponsibleFilter === resp ? 'active' : ''}`;
                 respBtn.dataset.filterType = 'responsible';
                 respBtn.dataset.filter = resp;
                 respBtn.textContent = resp;
@@ -270,27 +265,38 @@
             });
         }
 
+
         function getFilteredData() {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
+            const currentMonth = today.getMonth();
+            const currentYear = today.getFullYear();
+
             let filtered = checklistData.filter(item => 
                 (currentStatusFilter === 'Todos' || item.estado === currentStatusFilter) &&
                 (currentPriorityFilter === 'Todos' || item.prioridad === currentPriorityFilter) &&
-                (currentResponsibleFilter === 'Todos' || item.responsable === currentResponsibleFilter) // NUEVO FILTRO
+                (currentResponsibleFilter === 'Todos' || item.responsable === currentResponsibleFilter)
             );
             if (currentDateFilter !== 'Todas') {
                 filtered = filtered.filter(item => {
                     if (!item.deadline) return false;
                     const taskDate = new Date(item.deadline + 'T00:00:00');
-                    if (currentDateFilter === 'Vencidas') {
-                        return taskDate < today && item.estado !== 'Realizado' && item.estado !== 'Suspendido';
+                    if (!taskDate || isNaN(taskDate)) return false; 
+
+                    switch (currentDateFilter) {
+                        case 'Vencidas':
+                            return taskDate.getTime() < today.getTime() && item.estado !== 'Realizado' && item.estado !== 'Suspendido';
+                        case 'Hoy':
+                            return taskDate.getTime() === today.getTime();
+                        case 'Este Mes':
+                            return taskDate.getMonth() === currentMonth && taskDate.getFullYear() === currentYear;
+                        case 'Proximas':
+                            const sevenDaysFromNow = new Date(today);
+                            sevenDaysFromNow.setDate(today.getDate() + 7);
+                            return taskDate.getTime() > today.getTime() && taskDate.getTime() <= sevenDaysFromNow.getTime();
+                        default:
+                            return true;
                     }
-                    if (currentDateFilter === 'Proximas') {
-                        const sevenDaysFromNow = new Date(today);
-                        sevenDaysFromNow.setDate(today.getDate() + 7);
-                        return taskDate >= today && taskDate <= sevenDaysFromNow;
-                    }
-                    return true;
                 });
             }
             return filtered;
@@ -427,7 +433,7 @@
             if (currentStatusFilter !== 'Todos') filterText.push(`Estado: ${currentStatusFilter}`);
             if (currentPriorityFilter !== 'Todos') filterText.push(`Prioridad: ${currentPriorityFilter}`);
             if (currentDateFilter !== 'Todas') filterText.push(`Vence: ${currentDateFilter}`);
-            if (currentResponsibleFilter !== 'Todos') filterText.push(`Resp: ${currentResponsibleFilter}`); // NUEVO
+            if (currentResponsibleFilter !== 'Todos') filterText.push(`Resp: ${currentResponsibleFilter}`);
             document.getElementById('filter-label').textContent = filterText.length > 0 ? `(${filterText.join(', ')})` : '';
             renderPieChart(stats);
             renderResponsibleChart(dataToSummarize);
@@ -462,7 +468,6 @@
             responsibleChart = new Chart(ctx, { type: 'bar', data: { labels: labels, datasets: [{ label: 'Tareas Asignadas', data: chartData, backgroundColor: 'rgba(0, 153, 153, 0.6)', borderColor: 'rgba(0, 153, 153, 1)', borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false }, title: { display: true, text: 'Tareas por Responsable' } } } });
         }
         
-        // MODIFICADO: Maneja el nuevo filtro de responsable
         function handleFilterClick(event) {
             const target = event.target.closest('.filter-btn');
             if (!target) return;
@@ -476,9 +481,11 @@
                 else if (filterType === 'date') currentDateFilter = filterValue;
                 else if (filterType === 'responsible') currentResponsibleFilter = filterValue;
                 
-                const filterGroup = target.closest('.flex');
-                filterGroup.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-                target.classList.add('active');
+                const filterGroup = target.closest('.flex-wrap');
+                if(filterGroup) {
+                    filterGroup.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                    target.classList.add('active');
+                }
                 
                 renderChecklist();
             }
@@ -516,9 +523,8 @@
             const dateFilters = document.getElementById('date-filters');
             const responsibleFilters = document.getElementById('responsible-filters');
 
-            // --- Listeners Filtros ---
             manageFiltersBtn.addEventListener('click', () => {
-                renderFilterModal(); 
+                renderFilterModal();
                 filterOverlay.classList.add('visible');
             });
             closeFilterBtn.addEventListener('click', () => filterOverlay.classList.remove('visible'));
@@ -527,7 +533,7 @@
             priorityFilters.addEventListener('click', handleFilterClick);
             dateFilters.addEventListener('click', handleFilterClick);
             responsibleFilters.addEventListener('click', handleFilterClick);
-            
+
             exportBtn.addEventListener('click', exportToPDF);
             loadInitialData(); 
         });
