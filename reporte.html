@@ -347,16 +347,20 @@
                     if (itemsToShow.length === 0) {
                          content.innerHTML = `<p class="text-center text-gray-500 p-4">No hay tareas que coincidan con los filtros actuales.</p>`;
                     } else {
+                        // MODIFICADO: Lógica de ordenamiento cambiada
                         itemsToShow.sort((a, b) => {
                             const aHasDate = a.deadline && a.deadline.trim() !== '';
                             const bHasDate = b.deadline && b.deadline.trim() !== '';
-                            if (!aHasDate && bHasDate) return -1;
-                            if (aHasDate && !bHasDate) return 1;
+
+                            if (aHasDate && !bHasDate) return -1; 
+                            if (!aHasDate && bHasDate) return 1;  
+
                             if (!aHasDate && !bHasDate) {
-                                return a.requerimiento.localeCompare(b.requerimiento);
+                                return a.requerimiento.localeCompare(b.requerimiento); 
                             }
+
                             if (aHasDate && bHasDate) {
-                                return new Date(a.deadline) - new Date(b.deadline);
+                                return new Date(a.deadline) - new Date(b.deadline); 
                             }
                             return 0;
                         });

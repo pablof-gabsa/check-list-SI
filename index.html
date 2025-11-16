@@ -523,7 +523,7 @@
                 filtered = filtered.filter(item => {
                     if (!item.deadline) return false;
                     const taskDate = new Date(item.deadline + 'T00:00:00');
-                    if (!taskDate || isNaN(taskDate)) return false; // Comprobar fecha inválida
+                    if (!taskDate || isNaN(taskDate)) return false; 
 
                     switch (currentDateFilter) {
                         case 'Vencidas':
@@ -535,7 +535,8 @@
                         case 'Proximas':
                             const sevenDaysFromNow = new Date(today);
                             sevenDaysFromNow.setDate(today.getDate() + 7);
-                            return taskDate.getTime() > today.getTime() && taskDate.getTime() <= sevenDaysFromNow.getTime();
+                            // MODIFICADO: que incluya hoy
+                            return taskDate.getTime() >= today.getTime() && taskDate.getTime() <= sevenDaysFromNow.getTime();
                         default:
                             return true;
                     }
@@ -593,16 +594,20 @@
                     if (itemsToShow.length === 0) {
                          content.innerHTML = `<p class="text-center text-gray-500 p-4">No hay tareas que coincidan con los filtros actuales.</p>`;
                     } else {
+                        // MODIFICADO: Lógica de ordenamiento cambiada
                         itemsToShow.sort((a, b) => {
                             const aHasDate = a.deadline && a.deadline.trim() !== '';
                             const bHasDate = b.deadline && b.deadline.trim() !== '';
-                            if (!aHasDate && bHasDate) return -1;
-                            if (aHasDate && !bHasDate) return 1;
+
+                            if (aHasDate && !bHasDate) return -1; // a (con fecha) va ANTES que b (sin fecha)
+                            if (!aHasDate && bHasDate) return 1;  // a (sin fecha) va DESPUÉS que b (con fecha)
+
                             if (!aHasDate && !bHasDate) {
-                                return a.requerimiento.localeCompare(b.requerimiento);
+                                return a.requerimiento.localeCompare(b.requerimiento); // Orden alfabético
                             }
+
                             if (aHasDate && bHasDate) {
-                                return new Date(a.deadline) - new Date(b.deadline);
+                                return new Date(a.deadline) - new Date(b.deadline); // Orden por fecha
                             }
                             return 0;
                         });
