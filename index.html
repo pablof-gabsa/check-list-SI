@@ -13,6 +13,7 @@
 
     <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-auth-compat.js"></script>
 
     <script>
         tailwind.config = {
@@ -330,6 +331,7 @@
         };
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
+        const auth = firebase.auth(); // Inicializar Auth
         // --- FIN DE LA CONFIGURACIÓN DE FIREBASE ---
 
         let checklistData = [];
@@ -340,7 +342,7 @@
         let currentStatusFilter = 'Todos';
         let currentPriorityFilter = 'Todos';
         let currentDateFilter = 'Todas';
-        let currentResponsibleFilter = 'Todos';
+        let currentResponsibleFilter = 'Todos'; 
         let openRubros = new Set(); 
 
         // CONSTANTES GLOBALES
@@ -518,7 +520,6 @@
                 (currentPriorityFilter === 'Todos' || item.prioridad === currentPriorityFilter) &&
                 (currentResponsibleFilter === 'Todos' || item.responsable === currentResponsibleFilter)
             );
-            
             if (currentDateFilter !== 'Todas') {
                 filtered = filtered.filter(item => {
                     if (!item.deadline) return false;
@@ -535,7 +536,6 @@
                         case 'Proximas':
                             const sevenDaysFromNow = new Date(today);
                             sevenDaysFromNow.setDate(today.getDate() + 7);
-                            // MODIFICADO: que incluya hoy
                             return taskDate.getTime() >= today.getTime() && taskDate.getTime() <= sevenDaysFromNow.getTime();
                         default:
                             return true;
@@ -594,20 +594,19 @@
                     if (itemsToShow.length === 0) {
                          content.innerHTML = `<p class="text-center text-gray-500 p-4">No hay tareas que coincidan con los filtros actuales.</p>`;
                     } else {
-                        // MODIFICADO: Lógica de ordenamiento cambiada
                         itemsToShow.sort((a, b) => {
                             const aHasDate = a.deadline && a.deadline.trim() !== '';
                             const bHasDate = b.deadline && b.deadline.trim() !== '';
 
-                            if (aHasDate && !bHasDate) return -1; // a (con fecha) va ANTES que b (sin fecha)
-                            if (!aHasDate && bHasDate) return 1;  // a (sin fecha) va DESPUÉS que b (con fecha)
+                            if (aHasDate && !bHasDate) return -1; 
+                            if (!aHasDate && bHasDate) return 1;  
 
                             if (!aHasDate && !bHasDate) {
-                                return a.requerimiento.localeCompare(b.requerimiento); // Orden alfabético
+                                return a.requerimiento.localeCompare(b.requerimiento); 
                             }
 
                             if (aHasDate && bHasDate) {
-                                return new Date(a.deadline) - new Date(b.deadline); // Orden por fecha
+                                return new Date(a.deadline) - new Date(b.deadline); 
                             }
                             return 0;
                         });
@@ -1356,7 +1355,21 @@
             responsibleFilters.addEventListener('click', handleFilterClick);
 
             // Carga Inicial
-            loadInitialData();
+            // MODIFICADO: Autenticación Anónima antes de cargar datos
+            auth.signInAnonymously()
+                .then(() => {
+                    console.log('Usuario autenticado anónimamente');
+                })
+                .catch((error) => {
+                    console.error('Error en autenticación anónima:', error);
+                    alert("Error de conexión segura: " + error.message);
+                });
+
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    loadInitialData();
+                }
+            });
         });
     </script>
 </body>
